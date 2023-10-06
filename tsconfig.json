@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "esModuleInterop": true,
+    "lib": ["es2017", "DOM"],
+    "typeRoots" : ["./@types", "./node_modules/@types"],
+    "noEmit": true,
+   
+    "baseUrl": "./",
+    "noImplicitAny":false,
+    "paths":{
+        "@/*": ["src/*"],
+        "@views/*": ["src/views/*"],
+        "@store/*": ["src/store/*"],
+        "@components/*": ["src/components/*"],
+        "@template/*": ["src/components/template/*"],
+        "@atoms/*": ["src/components/atoms/*"],
+        "@app/*": ["src/app/*"],
+        "@core/*": ["src/app/core/*"],
+        "@game/*": ["src/app/game/*"],
+    }
+  },
+  "include": ["src", "src/**/*","*.vue", "*.ts"],
+}
