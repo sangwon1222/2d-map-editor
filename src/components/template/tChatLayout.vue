@@ -2,7 +2,6 @@
 import { useChatStore } from '@/store/chat';
 import { reactive, ref, watch } from 'vue';
 import { getTime } from '@/util';
-import { isBoolean } from 'lodash-es';
 
 const refInput = ref(null);
 const refSpeeckList = ref(null);
@@ -20,15 +19,18 @@ watch(useChatStore.chatting, (_new, _old) => {
 
 const toggleChatWindow = () => {
   state.openChatWindow = !state.openChatWindow;
-  if (state.openChatWindow) {
-    refInput.value.focus();
-  }
+  if (state.openChatWindow) refInput.value.focus();
 };
 
 const closeChat = () => {
   const div = refSpeeckList.value as HTMLDivElement;
   div.scrollTo({ top: div.scrollHeight });
   state.openChatWindow = false;
+};
+
+const openChat = () => {
+  state.openChatWindow = true;
+  refInput.value.focus();
 };
 
 const registChat = () => {
@@ -43,6 +45,7 @@ const registChat = () => {
 <template>
   <div
     v-if="useChatStore.mySocketId"
+    v-click-outside="closeChat"
     class="chat-wrap"
     :class="state.openChatWindow ? 'pointer-events-auto' : 'pointer-events-none'"
   >
@@ -55,7 +58,7 @@ const registChat = () => {
     <button
       v-if="!state.openChatWindow"
       class="pointer-events-auto absolute bottom-10 right-10 h-40 w-40 rounded-full bg-gray-100/40"
-      @click="state.openChatWindow = true"
+      @click="openChat"
     >
       📝
     </button>
@@ -100,11 +103,17 @@ const registChat = () => {
         class="input-wrap"
         :class="state.openChatWindow ? 'pointer-events-auto opacity-80' : 'pointer-events-none opacity-0'"
       >
-        <input ref="refInput" type="text" class="h-40 flex-1 rounded-xl bg-white px-10" @keydown.enter="registChat" />
-        <button
-          class="send-msg-btn use-before-tag"
+        <input
+          ref="refInput"
+          type="text"
+          class="h-40 flex-1 rounded-xl bg-white px-10"
           :class="state.openChatWindow ? 'pointer-events-auto' : 'pointer-events-none'"
-          @click="state.openChatWindow ? registChat() : null"
+          @keydown.enter="registChat"
+        />
+        <button
+          v-if="state.openChatWindow"
+          class="send-msg-btn use-before-tag"
+          @click.self="state.openChatWindow ? registChat() : null"
         />
       </div>
     </div>
@@ -113,7 +122,7 @@ const registChat = () => {
 
 <style lang="less" scoped>
 .chat-wrap {
-  @apply fixed left-0 top-0 z-90 h-screen w-screen;
+  @apply fixed bottom-20 right-10 z-90 h-600 w-600;
 
   button {
     @apply pointer-events-auto;
