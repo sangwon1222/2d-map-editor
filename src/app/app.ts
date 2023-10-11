@@ -2,9 +2,7 @@ import * as PIXI from 'pixijs';
 import SceneManager from '@app/sceneManager';
 import Scene from '@app/scene/scene';
 import { registVisibleChange } from '@/util';
-import { canvasInfo } from '@/util/config';
 import gsap from 'gsap';
-const { backgroundColor, width, height } = canvasInfo;
 /**
  * @params {number} - background color
  * @params {number} - canvas width
@@ -24,6 +22,7 @@ export default class App extends PIXI.Application {
 
   constructor({ backgroundColor, width, height, view }: TypeAppParms) {
     super({ backgroundColor, width, height, view });
+    this.renderer.options.antialias = true;
     App.handle = this;
   }
 
@@ -32,9 +31,10 @@ export default class App extends PIXI.Application {
     this.stage.alpha = 0;
     this.stage.removeChildren();
     this.mSceneManager = new SceneManager();
-    this.mSceneManager.zIndex = 1;
     this.stage.addChild(this.mSceneManager);
     this.stage.sortableChildren = true;
+    this.mSceneManager.zIndex = 1;
+
     registVisibleChange();
 
     await this.mSceneManager.init();
@@ -42,16 +42,6 @@ export default class App extends PIXI.Application {
   }
 
   async startInit() {
-    const test = new PIXI.Graphics();
-    test.beginFill(0xff0000, 1);
-    test.lineStyle(2, 0xff0000, 1);
-    test.drawRect(0, 0, 40, 40);
-    test.endFill();
-    test.position.set(1280 / 2, 800 / 2);
-    test.zIndex = 2;
-
-    this.stage.addChild(test);
-
     gsap.to(this.stage, { alpha: 1, duration: 1 });
   }
 

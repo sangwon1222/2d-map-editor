@@ -6,7 +6,6 @@ import { onMounted, ref } from 'vue';
 import { resize } from '@/util';
 import App from '@app/app';
 import { SocketIo } from '@/socket';
-import { map } from 'lodash-es';
 
 const refUserIdInput = ref(null);
 onMounted(async () => {

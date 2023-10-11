@@ -23,6 +23,36 @@ export default class Scene extends PIXI.Container {
     //
   }
 
+  usePointerEvent() {
+    this.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
+      e.defaultPrevented = true;
+      this.onPointerMove(e);
+    });
+
+    this.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.defaultPrevented = true;
+      this.onPointerDown(e);
+    });
+
+    const cancelMoveEvtList = ['up', 'cancel', 'out', 'leave'];
+    for (let i = 0; i < cancelMoveEvtList.length; i++) {
+      const eventName = `pointer${cancelMoveEvtList[i]}` as any;
+      this.on(eventName, (e: PIXI.FederatedPointerEvent) => {
+        this.disablePointerEvt(e);
+      });
+    }
+  }
+
+  onPointerMove(e: PIXI.FederatedPointerEvent) {
+    //
+  }
+  onPointerDown(e: PIXI.FederatedPointerEvent) {
+    //
+  }
+  disablePointerEvt(e: PIXI.FederatedPointerEvent) {
+    //
+  }
+
   async endGame() {
     gsap.globalTimeline.clear();
     this.removeChildren();

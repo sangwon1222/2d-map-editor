@@ -1,10 +1,27 @@
 {
     "common":{
       "img":[
+        "chevron.png",
+        "pos-icon.png",
+        "edit-tool-bg.png"
       ]
     },
     "map-editor":{
       "img":[
+        "black-wall-tile-50.png",
+        "black-wall-tile-t-r-50.png",
+        "black-wall-tile-t-l-50.png",
+        "black-wall-tile-b-r-50.png",
+        "black-wall-tile-b-l-50.png",
+        "black-wall-tile-100.png",
+        "black-wall-tile-200.png",
+        "wall-tile-50.png",
+        "wall-tile-t-r-50.png",
+        "wall-tile-t-l-50.png",
+        "wall-tile-b-r-50.png",
+        "wall-tile-b-l-50.png",
+        "wall-tile-100.png",
+        "wall-tile-200.png"
       ]
     }
   }
