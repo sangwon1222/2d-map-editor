@@ -76,9 +76,8 @@ export default class MapEditor extends Scene {
         this.cursor = 'grabbing';
       }
 
-      if (this.mEditSpriteIdx) {
-        console.log(this.mEditSpriteIdx);
-        // this.mEditSprite[this.mEditSpriteIdx].position.set(e.x, e.y);
+      if (this.mEditSprite[this.mEditSpriteIdx]?.isMovingInMap) {
+        this.mEditSprite[this.mEditSpriteIdx].position.set(e.screen.x, e.screen.y);
       }
     };
 

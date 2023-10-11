@@ -33,12 +33,14 @@ export default class MapContainer extends PIXI.Container {
       xline.beginFill(0x00ff00, 1);
       xline.drawRect(x, 0, 1, canvasInfo.height);
       xline.endFill();
+      xline.zIndex = -1;
       this.mGuideLineContainer.addChild(xline);
       for (let y = 0; y <= canvasInfo.height; y += 50) {
         const yline = new PIXI.Graphics();
         yline.beginFill(0x00ff00, 1);
         yline.drawRect(0, y, canvasInfo.width, 1);
         yline.endFill();
+        yline.zIndex = -1;
         this.mGuideLineContainer.addChild(yline);
       }
     }

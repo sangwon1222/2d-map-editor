@@ -45,17 +45,6 @@ export default class SpriteInMap extends PIXI.Container {
       matEditor.addChild(this);
     });
 
-    this.on('pointermove', (e) => {
-      e.preventDefault();
-      e.defaultPrevented = true;
-      e.stopPropagation();
-
-      if (this.mIsMovingInMap) {
-        const mapEditor = this.parent as MapEditor;
-        mapEditor.moveSprite(e, this.mIdx);
-      }
-    });
-
     this.on('pointerdown', (e) => {
       e.preventDefault();
       e.defaultPrevented = true;
