@@ -14,12 +14,8 @@ export default class Button extends PIXI.Sprite {
     this.texture = texture;
     this.cursor = 'pointer';
 
-    this.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
-      e.defaultPrevented = true;
-      if (!this.mIsMoving) return;
-      this.onMoving();
-    });
     this.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      if (e.ctrlKey) return;
       e.defaultPrevented = true;
       this.onDown();
     });
@@ -38,10 +34,6 @@ export default class Button extends PIXI.Sprite {
   }
 
   onEnter() {
-    //
-  }
-
-  onMoving() {
     //
   }
 

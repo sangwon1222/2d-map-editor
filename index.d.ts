@@ -6,6 +6,10 @@ declare interface TypeChatStore {
   chatting: { chat: string; time: string; nickname: string }[];
 }
 
+declare interface TypeMapStore {
+  mapJson: any;
+}
+
 declare interface TypeLayoutStore {
   isLoading: boolean;
   gnbMode: boolean;
@@ -22,6 +26,8 @@ declare interface TypeCanvasInfo {
   backgroundColor: number;
   width: number;
   height: number;
+  tileScale: number;
+  tileMap: any;
 }
 
 declare interface TypeObjectAny {

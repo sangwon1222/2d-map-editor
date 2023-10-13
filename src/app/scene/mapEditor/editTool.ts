@@ -56,14 +56,27 @@ export default class EditTool extends PIXI.Container {
     this.mSpriteList = [];
     let colId = 0;
     for (let i = 0; i < rsc.length; i++) {
+      const gap = 20;
+      const rowId = i % 3 ? 1 : 0;
+      if (rowId === 0 && i > 0) colId += 1;
       this.mSpriteList.push(new EditSprite(rsc[i]));
 
-      const rowId = i % 3 ? 1 : 0;
-      if (!rowId && i) colId += 1;
-      const x = i ? rowId * (this.mSpriteList[i - 1].x + this.mSpriteList[i].width + 10) : 0;
-      const y = i ? colId * (this.mSpriteList[i].height + 10) : 0;
-      this.mSpriteList[i].position.set(x, y);
-      layout.addChild(this.mSpriteList[i]);
+      const bgWidth = this.mSpriteList[i].width + 20;
+      const bgHeight = this.mSpriteList[i].height + 20;
+      const x = i ? rowId * (this.mSpriteList[i - 1].x + bgWidth) : 0;
+      const y = i ? colId * (bgHeight + 10) : 0;
+
+      this.mSpriteList[i].position.set(x + gap / 2, y + gap / 2);
+      this.mSpriteList[i].zIndex = 2;
+
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0xffffff, 1);
+      bg.drawRect(0, 0, bgWidth, bgHeight);
+      bg.endFill();
+      bg.position.set(x, y);
+      bg.zIndex = 1;
+
+      layout.addChild(bg, this.mSpriteList[i]);
     }
 
     this.mOpenSpriteContainer = false;
@@ -89,7 +102,8 @@ export default class EditTool extends PIXI.Container {
     this.mResetMapPosBtn = new Button(rscManager.getHandle.getRsc('pos-icon.png', true));
     this.mResetMapPosBtn.scale.set(0.1);
     this.mResetMapPosBtn.anchor.set(0.5);
-    this.mResetMapPosBtn.position.set(canvasInfo.width - resetPosScale * 2, resetPosScale);
+    // this.mResetMapPosBtn.position.set(canvasInfo.width - resetPosScale * 2, resetPosScale);
+    this.mResetMapPosBtn.position.set(this.mResetMapPosBtn.width, this.mResetMapPosBtn.height);
     this.mResetMapPosBtn.interactive = true;
     this.mResetMapPosBtn.onDown = () => this.resetMapContainerPos();
     this.mResetMapPosBtn.onEnter = () => {
@@ -100,7 +114,9 @@ export default class EditTool extends PIXI.Container {
       this.mBtnMotion.to(this.mResetMapPosBtn, { rotation: 0, duration: 0.15 });
     };
 
-    this.addChild(this.mResetMapPosBtn, this.mSpriteContainer);
+    // this.addChild(this.mResetMapPosBtn, this.mSpriteContainer);
+    this.mSpriteContainer.addChild(this.mResetMapPosBtn);
+    this.addChild(this.mSpriteContainer);
     this.sortableChildren = true;
   }
 

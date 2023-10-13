@@ -8,6 +8,7 @@
     },
     "map-editor":{
       "img":[
+        "floor-1.png",
         "black-wall-tile-50.png",
         "black-wall-tile-t-r-50.png",
         "black-wall-tile-t-l-50.png",

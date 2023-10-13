@@ -9,25 +9,28 @@ export default class SpriteInMap extends PIXI.Container {
   private mSprite: PIXI.Sprite;
   private mIsMovingInMap: boolean;
   private mIdx: number;
-  private mMyPos: { x: number; y: number };
+  private mTextureName: string;
 
+  get textureName(): string {
+    return this.mTextureName;
+  }
   get isMovingInMap(): boolean {
     return this.mIsMovingInMap;
+  }
+  set isMovingInMap(v: boolean) {
+    this.mIsMovingInMap = v;
   }
   get idx(): number {
     return this.mIdx;
   }
-  get mypos(): { x: number; y: number } {
-    return this.mMyPos;
-  }
-  constructor(idx: number, textureName: string, x: number, y: number) {
+
+  constructor(idx: number, textureName: string) {
     super();
+    this.mTextureName = textureName;
     this.mIdx = idx;
     this.mIsMovingInMap = false;
-    this.mMyPos = { x, y };
     this.mSprite = new PIXI.Sprite(rscManager.getHandle.getRsc(textureName));
     this.mSprite.anchor.set(0.5);
-    this.mSprite.position.set(this.mSprite.width / 2, this.mSprite.height / 2);
     this.mSprite.zIndex = 2;
 
     this.sortableChildren = true;
@@ -36,41 +39,19 @@ export default class SpriteInMap extends PIXI.Container {
     this.interactive = true;
     this.cursor = 'pointer';
     this.on('pointerdown', (e) => {
+      if (e.ctrlKey) return;
       e.preventDefault();
-      e.defaultPrevented = true;
       e.stopPropagation();
-      this.mIsMovingInMap = true;
-      this.hitArea = new PIXI.Rectangle(0, 0, canvasInfo.width, canvasInfo.height);
-      const matEditor = App.getHandle.getScene as MapEditor;
-      matEditor.addChild(this);
-    });
-
-    this.on('pointerdown', (e) => {
-      e.preventDefault();
       e.defaultPrevented = true;
-      e.stopPropagation();
       this.mIsMovingInMap = true;
-      // this.hitArea = new PIXI.Rectangle(0, 0, canvasInfo.width, canvasInfo.height);
       const matEditor = App.getHandle.getScene as MapEditor;
-      matEditor.addChild(this);
-      matEditor.editSpriteIdx = this.mIdx;
+      matEditor.editSpritePos(this.mIdx, e.global.x, e.global.y);
     });
-
-    const cancelMoveEvtList = ['up', 'cancel', 'out', 'leave'];
-    for (let i = 0; i < cancelMoveEvtList.length; i++) {
-      const eventName = `pointer${cancelMoveEvtList[i]}` as any;
-      this.on(eventName, (e: PIXI.FederatedPointerEvent) => {
-        e.preventDefault();
-        e.defaultPrevented = true;
-        e.stopPropagation();
-        this.mIsMovingInMap = false;
-        this.hitArea = new PIXI.Rectangle(0, 0, this.width, this.height);
-      });
-    }
   }
 
   disable() {
-    // const mapContainer = this.parent as MapContainer;
-    // mapContainer.moveSprite(this.mIdx);
+    this.mIsMovingInMap = false;
+    const matEditor = App.getHandle.getScene as MapEditor;
+    matEditor.endMove();
   }
 }

@@ -3,9 +3,9 @@ import MapContainer from './mapContainer';
 import Scene from '@app/scene/scene';
 import EditTool from './editTool';
 import * as PIXI from 'pixijs';
-import { rscManager } from '@/app/resource/resourceManager';
-import gsap from 'gsap';
 import SpriteInMap from './SpriteInMap';
+import { map } from 'lodash-es';
+import { useMapStore } from '@/store/map';
 
 const mapContainerPos = [canvasInfo.width / 2, canvasInfo.height / 2];
 /**
@@ -19,7 +19,11 @@ export default class MapEditor extends Scene {
   private mEditTool: EditTool;
   private mEditSprite: { [key: number]: SpriteInMap };
   private mEditSpriteIdx: number;
+  private mEditSpritePos: number[];
 
+  get editSpriteAry(): { [key: number]: SpriteInMap } {
+    return this.mEditSprite;
+  }
   set editSpriteIdx(v: number) {
     this.mEditSpriteIdx = v;
   }
@@ -34,6 +38,7 @@ export default class MapEditor extends Scene {
     this.hitArea = new PIXI.Rectangle(0, 0, canvasInfo.width, canvasInfo.height);
     this.mIsMovingMap = false;
     this.mMapPos = [0, 0];
+    this.mEditSpritePos = [-1, -1];
     this.mEditSprite = {};
   }
 
@@ -62,30 +67,35 @@ export default class MapEditor extends Scene {
     };
 
     this.usePointerEvent();
+
     this.onPointerDown = (e: PIXI.FederatedPointerEvent) => {
-      const { x, y } = { x: Math.floor(e.screen.x), y: Math.floor(e.screen.y) };
+      const { x, y } = { x: Math.floor(e.global.x), y: Math.floor(e.global.y) };
       this.mMapPos = [x, y];
-      this.mIsMovingMap = true;
+
+      this.mIsMovingMap = e.ctrlKey;
     };
 
     this.onPointerMove = (e: PIXI.FederatedPointerEvent) => {
-      if (this.mIsMovingMap) {
-        const { x, y } = { x: Math.floor(e.screen.x), y: Math.floor(e.screen.y) };
+      if (this.mIsMovingMap && e.ctrlKey) {
+        const { x, y } = { x: Math.floor(e.global.x), y: Math.floor(e.global.y) };
         this.mMapContainer.moveMap(x - this.mMapPos[0], y - this.mMapPos[1]);
         this.mMapPos = [x, y];
         this.cursor = 'grabbing';
+        console.log(this.cursor);
       }
 
       if (this.mEditSprite[this.mEditSpriteIdx]?.isMovingInMap) {
-        this.mEditSprite[this.mEditSpriteIdx].position.set(e.screen.x, e.screen.y);
+        this.moveSprite(e);
       }
     };
 
-    this.disablePointerEvt = (e: PIXI.FederatedPointerEvent) => {
-      e.defaultPrevented = true;
+    this.disablePointerEvt = (_e: PIXI.FederatedPointerEvent) => {
+      if (this.mEditSpriteIdx > -1) {
+        this.mEditSprite[this.mEditSpriteIdx].disable();
+        this.mEditSpriteIdx = -1;
+      }
       this.mIsMovingMap = false;
-      this.cursor = 'grab';
-      this.mMapContainer.endEditSprite();
+      this.cursor = 'pointer';
     };
   }
 
@@ -94,19 +104,59 @@ export default class MapEditor extends Scene {
     if (wheelDown) this.mMapContainer.scaleUp();
   }
 
-  addSprite(textureName: string) {
+  addSprite(textureName: string, x: number, y: number) {
     const idx = Object.keys(this.mEditSprite).length;
-    this.mEditSprite[idx] = new SpriteInMap(idx, textureName, 0, 0);
-    this.mEditSprite[idx].position.set(this.mMapContainer.x, this.mMapContainer.y);
+    this.mEditSprite[idx] = new SpriteInMap(idx, textureName);
+    this.mEditSprite[idx].isMovingInMap = true;
+    this.mEditSpriteIdx = idx;
+    this.mEditSprite[idx].position.set(x, y);
+    this.mEditSprite[idx].zIndex = 6;
     this.addChild(this.mEditSprite[idx]);
-    this.mEditTool.resetMapContainerPos();
-    // this.mMapContainer.addTile(textureName);
   }
 
-  moveSprite(e: PIXI.FederatedPointerEvent, idx: number) {
-    if (!this.mEditSprite[idx].isMovingInMap) return;
-    console.log(e);
-    // this.mEditSprite[idx].position.set(e.);
+  editSpritePos(idx: number, x: number, y: number) {
+    if (idx < 0) return;
+    map(this.mEditSprite, (e) => e.disable());
+
+    this.mEditSpriteIdx = idx;
+    this.mEditSprite[idx].isMovingInMap = true;
+    this.mEditSprite[idx].position.set(x, y);
+
+    this.mMapContainer.removeChild(this.mEditSprite[idx]);
+    this.addChild(this.mEditSprite[idx]);
+
+    const mapPos = this.mMapContainer.position;
+    const mapx = Math.floor((x - mapPos.x) / 50) * 50;
+    const mapy = Math.floor((y - mapPos.y) / 50) * 50;
+    this.mEditSpritePos = [mapx, mapy];
+  }
+
+  moveSprite(e: PIXI.FederatedPointerEvent) {
+    const sprite = this.mEditSprite[this.mEditSpriteIdx];
+    const { global } = e;
+    const mapPos = this.mMapContainer.position;
+    const mapx = Math.floor((global.x - mapPos.x) / 50) * 50;
+    const mapy = Math.floor((global.y - mapPos.y) / 50) * 50;
+
+    const isEnterMap = mapx >= 0 && mapx <= canvasInfo.width && mapy >= 0 && mapy <= canvasInfo.height;
+    const x = isEnterMap ? mapPos.x + mapx + sprite.width / 2 : global.x;
+    const y = isEnterMap ? mapPos.y + mapy + sprite.height / 2 : global.y;
+    sprite.position.set(x, y);
+    this.mEditSpritePos = [isEnterMap ? mapx : -1, isEnterMap ? mapy : -1];
+  }
+
+  endMove() {
+    const [x, y] = this.mEditSpritePos;
+    if (x >= 0 && x <= canvasInfo.width && y >= 0 && y <= canvasInfo.height) {
+      this.removeChild(this.mEditSprite[this.mEditSpriteIdx]);
+      useMapStore.mapJson[y / 50][x / 50] = {
+        idx: this.mEditSpriteIdx,
+        textureName: this.mEditSprite[this.mEditSpriteIdx].textureName,
+      };
+      this.mMapContainer.updateMap();
+    }
+
+    this.mEditSpritePos = [-1, -1];
   }
 
   async endGame() {

@@ -25,19 +25,28 @@ export default class Scene extends PIXI.Container {
 
   usePointerEvent() {
     this.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       e.defaultPrevented = true;
       this.onPointerMove(e);
     });
 
     this.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       e.defaultPrevented = true;
       this.onPointerDown(e);
     });
 
-    const cancelMoveEvtList = ['up', 'cancel', 'out', 'leave'];
+    const cancelMoveEvtList = ['up', 'cancel', 'leave'];
     for (let i = 0; i < cancelMoveEvtList.length; i++) {
       const eventName = `pointer${cancelMoveEvtList[i]}` as any;
       this.on(eventName, (e: PIXI.FederatedPointerEvent) => {
+        console.log(eventName);
+        e.preventDefault();
+        e.stopPropagation();
+        e.defaultPrevented = true;
+
         this.disablePointerEvt(e);
       });
     }
