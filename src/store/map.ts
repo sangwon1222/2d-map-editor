@@ -5,7 +5,7 @@ export const useMapStore: TypeMapStore = reactive({
     ? JSON.parse(localStorage.getItem('mapJson'))
     : Array.from({ length: 16 }, () =>
         Array.from({ length: 26 }, () => {
-          return { idx: -1, textureName: 'floor-1.png' };
+          return { idx: -1, textureName: 'floor-1.png', itemStaus: 2 };
         }),
       ),
 });

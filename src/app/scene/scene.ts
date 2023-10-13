@@ -42,7 +42,6 @@ export default class Scene extends PIXI.Container {
     for (let i = 0; i < cancelMoveEvtList.length; i++) {
       const eventName = `pointer${cancelMoveEvtList[i]}` as any;
       this.on(eventName, (e: PIXI.FederatedPointerEvent) => {
-        console.log(eventName);
         e.preventDefault();
         e.stopPropagation();
         e.defaultPrevented = true;

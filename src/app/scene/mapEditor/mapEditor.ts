@@ -81,7 +81,6 @@ export default class MapEditor extends Scene {
         this.mMapContainer.moveMap(x - this.mMapPos[0], y - this.mMapPos[1]);
         this.mMapPos = [x, y];
         this.cursor = 'grabbing';
-        console.log(this.cursor);
       }
 
       if (this.mEditSprite[this.mEditSpriteIdx]?.isMovingInMap) {
@@ -106,7 +105,7 @@ export default class MapEditor extends Scene {
 
   addSprite(textureName: string, x: number, y: number) {
     const idx = Object.keys(this.mEditSprite).length;
-    this.mEditSprite[idx] = new SpriteInMap(idx, textureName);
+    this.mEditSprite[idx] = new SpriteInMap(idx, textureName, 1);
     this.mEditSprite[idx].isMovingInMap = true;
     this.mEditSpriteIdx = idx;
     this.mEditSprite[idx].position.set(x, y);
@@ -152,6 +151,7 @@ export default class MapEditor extends Scene {
       useMapStore.mapJson[y / 50][x / 50] = {
         idx: this.mEditSpriteIdx,
         textureName: this.mEditSprite[this.mEditSpriteIdx].textureName,
+        itemStatus: this.mEditSprite[this.mEditSpriteIdx].itemStatus,
       };
       this.mMapContainer.updateMap();
     }

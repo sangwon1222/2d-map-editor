@@ -50,7 +50,7 @@ export default class MapContainer extends PIXI.Container {
 
         if (x != endX && y != endY) {
           const info = useMapStore.mapJson[y][x];
-          const sprite = new SpriteInMap(info.idx, info.textureName);
+          const sprite = new SpriteInMap(info.idx, info.textureName, info.itemStatus);
           sprite.position.set(x * 50 + 25, y * 50 + 25);
           this.mSpriteContainer.addChild(sprite);
         }
@@ -81,7 +81,11 @@ export default class MapContainer extends PIXI.Container {
 
     for (let y = 0; y < endY; y += 1) {
       for (let x = 0; x < endX; x += 1) {
-        const sprite = new SpriteInMap(useMapStore.mapJson[y][x].idx, useMapStore.mapJson[y][x].textureName);
+        const sprite = new SpriteInMap(
+          useMapStore.mapJson[y][x].idx,
+          useMapStore.mapJson[y][x].textureName,
+          useMapStore.mapJson[y][x].itemStatus,
+        );
         sprite.position.set(x * 50 + 25, y * 50 + 25);
         this.mSpriteContainer.addChild(sprite);
       }

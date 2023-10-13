@@ -2,15 +2,22 @@ import App from '@/app/app';
 import { rscManager } from '@/app/resource/resourceManager';
 import * as PIXI from 'pixijs';
 import MapEditor from './mapEditor';
-import MapContainer from './mapContainer';
-import { canvasInfo } from '@/util/config';
+
+/**
+ * itemStatus: 1 => 장애물
+ * itemStatus: 2 => 통과물
+ */
 
 export default class SpriteInMap extends PIXI.Container {
   private mSprite: PIXI.Sprite;
   private mIsMovingInMap: boolean;
   private mIdx: number;
   private mTextureName: string;
+  private mItemStatus: number;
 
+  get itemStatus(): number {
+    return this.mItemStatus;
+  }
   get textureName(): string {
     return this.mTextureName;
   }
@@ -24,7 +31,7 @@ export default class SpriteInMap extends PIXI.Container {
     return this.mIdx;
   }
 
-  constructor(idx: number, textureName: string) {
+  constructor(idx: number, textureName: string, itemStatus: number) {
     super();
     this.mTextureName = textureName;
     this.mIdx = idx;
