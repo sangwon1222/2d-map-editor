@@ -3,6 +3,7 @@ import { canvasInfo } from '@/util/config';
 import SpriteInMap from './SpriteInMap';
 import MapEditor from './mapEditor';
 import { useMapStore } from '@/store/map';
+import { useChatStore } from '@/store/chat';
 
 const scaleScope = 0.02;
 export default class MapContainer extends PIXI.Container {
@@ -87,5 +88,6 @@ export default class MapContainer extends PIXI.Container {
     }
 
     localStorage.setItem('mapJson', JSON.stringify(useMapStore.mapJson));
+    useChatStore.socket.emit('update-map-json', { mapJson: JSON.stringify(useMapStore.mapJson) });
   }
 }

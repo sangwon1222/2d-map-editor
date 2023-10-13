@@ -3,6 +3,7 @@ import { useChatStore } from '@store/chat';
 import { useLayoutStore } from '@store/layout';
 import { map } from 'lodash-es';
 import { toast } from 'vue3-toastify';
+import { useMapStore } from '@/store/map';
 
 export class SocketIo {
   private socket: Socket;
@@ -53,6 +54,10 @@ export class SocketIo {
     this.socket.on('add-chat', ({ nickname, chat, time }) => {
       console.log('add-chat', { nickname, chat, time });
       useChatStore.chatting.push({ nickname, chat, time });
+    });
+
+    this.socket.on('update-map-json', ({ mapJson }) => {
+      useMapStore.mapJson = JSON.parse(mapJson);
     });
 
     this.socket.on('leave-user', ({ nickname, socketUserList }) => {
