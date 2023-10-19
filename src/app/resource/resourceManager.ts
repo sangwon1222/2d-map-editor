@@ -63,7 +63,10 @@ export class rscManager {
   public getRsc(srcKey: string, common?: boolean) {
     const sceneName = common ? 'common' : Application.getHandle.getScene?.info?.name;
     const key = `${sceneName}/${srcKey}`;
-
-    return this.mRscObject[key];
+    if (this.mRscObject[key]) return this.mRscObject[key];
+    else {
+      console.error(`[${key}] 이미지 없다.`);
+      return null;
+    }
   }
 }

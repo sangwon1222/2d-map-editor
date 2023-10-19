@@ -3,7 +3,9 @@ import { canvasInfo } from '@/util/config';
 import SpriteInMap from './SpriteInMap';
 import MapEditor from './mapEditor';
 import { useMapStore } from '@/store/map';
-import { useChatStore } from '@/store/chat';
+import { useSocketStore } from '@/store/socket';
+import { getCoordinate, getDegree } from '@/util';
+import { rscManager } from '@/app/resource/resourceManager';
 
 const scaleScope = 0.02;
 export default class MapContainer extends PIXI.Container {
@@ -26,36 +28,79 @@ export default class MapContainer extends PIXI.Container {
 
     this.sortableChildren = true;
 
-    this.addChild(this.mGuideLineContainer, this.mSpriteContainer);
-  }
+    const grid = new PIXI.Graphics();
+    grid.lineStyle(1, 0xffffff, 1);
+    grid.drawPolygon([
+      0,
+      0,
+      canvasInfo.width / 2,
+      canvasInfo.width / 2 / 2,
+      0,
+      canvasInfo.width / 2,
+      -canvasInfo.width / 2,
+      canvasInfo.width / 2 / 2,
+    ]);
+    grid.endFill();
+    this.mGuideLineContainer.addChild(grid);
 
-  async makeGuideLine() {
-    this.mGuideLineContainer.removeChildren();
-    this.mSpriteContainer.removeChildren();
-    const endX = canvasInfo.width / canvasInfo.tileScale;
-    const endY = canvasInfo.height / canvasInfo.tileScale;
+    const { tileScale } = canvasInfo;
+    for (let x = 0; x < 14; x++) {
+      for (let y = 0; y < 14; y++) {
+        const startX = x - y;
+        const test = new PIXI.Container();
+        const tile = new PIXI.Graphics();
+        tile.lineStyle(1, test[y] ? test[y] : 0xfff000, 1);
+        tile.beginFill(0xffffff, 1);
+        tile.drawRect(0, 0, tileScale * 2, tileScale);
+        tile.endFill();
+        tile.pivot.set(tileScale, 0);
+        tile.position.set(startX * tileScale, (y * tileScale) / 2 + (x * tileScale) / 2);
 
-    for (let y = 0; y <= endY; y += 1) {
-      const yline = new PIXI.Graphics();
-      yline.beginFill(0xff0000, 1);
-      yline.drawRect(0, y * canvasInfo.tileScale, canvasInfo.width, 1);
-      yline.endFill();
-      this.mGuideLineContainer.addChild(yline);
-      for (let x = 0; x <= endX; x += 1) {
-        const xline = new PIXI.Graphics();
-        xline.beginFill(0xff0000, 1);
-        xline.drawRect(x * canvasInfo.tileScale, 0, 1, canvasInfo.height);
-        xline.endFill();
-        this.mGuideLineContainer.addChild(xline);
+        const mask = new PIXI.Graphics();
+        mask.beginFill(0xffffff, 1);
+        mask.drawPolygon([
+          /**1 */
+          tileScale,
+          0,
+          /**2 */
+          tileScale * 2,
+          tileScale / 2,
+          /**3 */
+          tileScale * 2,
+          tileScale * 1.5,
+          /**4 */
+          tileScale,
+          tileScale * 2,
+          /**5 */
+          0,
+          tileScale * 1.5,
+          /**5 */
+          tileScale * 2,
+          tileScale / 2,
+        ]);
+        mask.endFill();
+        mask.position.set(tile.x, tile.y);
 
-        if (x != endX && y != endY) {
-          const info = useMapStore.mapJson[y][x];
-          const sprite = new SpriteInMap(info.idx, info.textureName, info.itemStatus);
-          sprite.position.set(x * 50 + 25, y * 50 + 25);
-          this.mSpriteContainer.addChild(sprite);
-        }
+        tile.mask = mask;
+        const sprite = new PIXI.Sprite(rscManager.getHandle.getRsc('tile.png', true));
+        sprite.position.set(tile.x, tile.y);
+        sprite.anchor.set(0.5, 0);
+        sprite.alpha = 0.1;
+
+        sprite.interactive = true;
+        sprite.on('pointerenter', () => {
+          sprite.alpha = 1;
+        });
+        sprite.on('pointerleave', () => {
+          sprite.alpha = 0.1;
+        });
+        test.addChild(tile);
+
+        this.mGuideLineContainer.addChild(test, sprite);
       }
     }
+
+    this.addChild(this.mGuideLineContainer, this.mSpriteContainer);
   }
 
   scaleUp() {
@@ -92,6 +137,6 @@ export default class MapContainer extends PIXI.Container {
     }
 
     localStorage.setItem('mapJson', JSON.stringify(useMapStore.mapJson));
-    useChatStore.socket.emit('update-map-json', { mapJson: JSON.stringify(useMapStore.mapJson) });
+    useSocketStore.socket.emit('update-map-json', { mapJson: JSON.stringify(useMapStore.mapJson) });
   }
 }

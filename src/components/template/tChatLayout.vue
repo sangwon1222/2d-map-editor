@@ -1,5 +1,5 @@
 <script lang="ts" setup scoped>
-import { useChatStore } from '@/store/chat';
+import { useSocketStore } from '@/store/socket';
 import { reactive, ref, watch } from 'vue';
 import { getTime } from '@/util';
 
@@ -10,7 +10,7 @@ const state = reactive({
   openChatWindow: false,
 });
 
-watch(useChatStore.chatting, (_new, _old) => {
+watch(useSocketStore.chatting, (_new, _old) => {
   setTimeout(() => {
     const div = refSpeeckList.value as HTMLDivElement;
     div.scrollTo({ top: div.scrollHeight });
@@ -37,21 +37,21 @@ const registChat = () => {
   const input = refInput.value as HTMLInputElement;
   const value = input.value;
   if (!value) return;
-  useChatStore.socket.emit('add-chat', { nickname: useChatStore.myNickName, chat: value, time: getTime() });
+  useSocketStore.socket.emit('add-chat', { nickname: useSocketStore.myNickName, chat: value, time: getTime() });
   input.value = '';
 };
 </script>
 
 <template>
   <div
-    v-if="useChatStore.mySocketId"
+    v-if="useSocketStore.mySocketId"
     v-click-outside="closeChat"
     class="chat-wrap"
     :class="state.openChatWindow ? 'pointer-events-auto' : 'pointer-events-none'"
   >
     <div class="user-list" @click="toggleChatWindow">
-      <p v-for="(v, i) in useChatStore.socketUserList" :key="i" :class="`bg-gray-${i % 2 ? '100' : '200'}`">
-        {{ v === useChatStore.myNickName ? '✔   ' : '' }} {{ v }}
+      <p v-for="(v, i) in useSocketStore.socketUserList" :key="i" :class="`bg-gray-${i % 2 ? '100' : '200'}`">
+        {{ v === useSocketStore.myNickName ? '✔   ' : '' }} {{ v }}
       </p>
     </div>
 
@@ -74,25 +74,25 @@ const registChat = () => {
         ref="refSpeeckList"
         :class="state.openChatWindow ? 'h-500 overflow-y-auto opacity-100' : 'h-300 overflow-hidden opacity-30'"
       >
-        <ul v-for="({ chat, time, nickname }, i) in useChatStore.chatting" :key="i" class="flex flex-col px-10">
+        <ul v-for="({ chat, time, nickname }, i) in useSocketStore.chatting" :key="i" class="flex flex-col px-10">
           <li
-            :class="nickname === useChatStore.myNickName ? 'self-end ' : 'self-start '"
+            :class="nickname === useSocketStore.myNickName ? 'self-end ' : 'self-start '"
             class="flex gap-6 rounded-6 bg-gray-100/30 px-10 text-gray-200"
           >
-            <p :class="nickname === useChatStore.myNickName ? 'text-teal-100 ' : 'text-red-100 '">[</p>
+            <p :class="nickname === useSocketStore.myNickName ? 'text-teal-100 ' : 'text-red-100 '">[</p>
             {{ nickname }}
-            <p :class="nickname === useChatStore.myNickName ? 'text-teal-100 ' : 'text-red-100 '">]</p>
+            <p :class="nickname === useSocketStore.myNickName ? 'text-teal-100 ' : 'text-red-100 '">]</p>
           </li>
 
           <li
-            :class="nickname === useChatStore.myNickName ? ' self-end bg-teal-200' : 'self-start bg-red-200'"
+            :class="nickname === useSocketStore.myNickName ? ' self-end bg-teal-200' : 'self-start bg-red-200'"
             class="my-6 w-fit rounded-10 bg-gray-100/10 px-6"
           >
             <p class="text-black">{{ chat }}</p>
             <p
               v-if="state.openChatWindow"
               class="text-2xs"
-              :class="nickname === useChatStore.myNickName ? ' self-end' : 'self-start'"
+              :class="nickname === useSocketStore.myNickName ? ' self-end' : 'self-start'"
             >
               {{ time }}
             </p>

@@ -52,6 +52,7 @@ export default class SceneManager extends PIXI.Container {
     await scene.init();
     this.addChild(scene);
 
+    console.log(`--we go [${sceneName}]`);
     useLayoutStore.isLoading = false;
   }
 }

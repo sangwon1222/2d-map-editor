@@ -2,6 +2,7 @@
     "common":{
       "img":[
         "chevron.png",
+        "tile.png",
         "pos-icon.png",
         "edit-tool-bg.png"
       ]

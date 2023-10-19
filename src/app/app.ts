@@ -28,7 +28,6 @@ export default class App extends PIXI.Application {
 
   /** @description application 초기 세팅  */
   async init() {
-    this.stage.alpha = 0;
     this.stage.removeChildren();
     this.mSceneManager = new SceneManager();
     this.stage.addChild(this.mSceneManager);
@@ -39,10 +38,6 @@ export default class App extends PIXI.Application {
 
     await this.mSceneManager.init();
     await this.mSceneManager.start();
-  }
-
-  async startInit() {
-    gsap.to(this.stage, { alpha: 1, duration: 1 });
   }
 
   /** @description 탭이 안보일 때  */

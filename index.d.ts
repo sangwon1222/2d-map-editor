@@ -6,6 +6,10 @@ declare interface TypeChatStore {
   chatting: { chat: string; time: string; nickname: string }[];
 }
 
+declare interface TypeItemStore {
+  itemJson: any;
+}
+
 declare interface TypeMapStore {
   mapJson: any;
 }

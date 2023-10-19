@@ -1,4 +1,5 @@
 import App from '@/app/app';
+import crypto from 'crypto-js';
 import { canvasInfo } from '@/util/config';
 
 export const resize = (canvasElement: HTMLCanvasElement) => {
@@ -15,6 +16,34 @@ export const resize = (canvasElement: HTMLCanvasElement) => {
     canvasElement.style.width = `${innerWidth}px`;
     canvasElement.style.height = `${innerWidth / canvasRate}px`;
   }
+};
+
+export const setEncode = (data: string, secretKey: string) => {
+  if (!data) return null;
+  const byte = crypto.AES.encrypt(JSON.stringify(data), secretKey);
+  const encode = byte.toString();
+  return encode;
+};
+
+export const setDecode = (data: string, secretKey: string) => {
+  if (!data) return null;
+  const byte = crypto.AES.decrypt(data, secretKey);
+  const decode = byte.toString(crypto.enc.Utf8);
+  return JSON.parse(decode);
+};
+
+export const getDegree = (y: number, x: number) => {
+  return (Math.atan2(y, x) * 180) / Math.PI;
+};
+
+export const getCoordinate = (moveX, moveY, distance, degree) => {
+  const x = Math.cos(degree) * distance - moveX;
+  const y = Math.sin(degree) * distance - moveY;
+  return { x, y };
+};
+
+export const getDistance = (y1: number, y2: number, x1: number, x2: number) => {
+  return Math.round(Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2)));
 };
 
 /**

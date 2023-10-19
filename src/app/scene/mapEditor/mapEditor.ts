@@ -6,6 +6,7 @@ import * as PIXI from 'pixijs';
 import SpriteInMap from './SpriteInMap';
 import { map } from 'lodash-es';
 import { useMapStore } from '@/store/map';
+import GridLayer from './gridLayer';
 
 const mapContainerPos = [canvasInfo.width / 2, canvasInfo.height / 2];
 /**
@@ -14,6 +15,7 @@ const mapContainerPos = [canvasInfo.width / 2, canvasInfo.height / 2];
  */
 export default class MapEditor extends Scene {
   private mMapContainer: MapContainer;
+  private mMapIsometricGridLayout: GridLayer;
   private mIsMovingMap: Boolean;
   private mMapPos: number[];
   private mEditTool: EditTool;
@@ -43,22 +45,32 @@ export default class MapEditor extends Scene {
   }
 
   async init() {
+    this.mMapIsometricGridLayout = new GridLayer();
+    await this.mMapIsometricGridLayout.drawIsometric();
+    this.mMapIsometricGridLayout.pivot.set(
+      this.mMapIsometricGridLayout.width / 2,
+      this.mMapIsometricGridLayout.height / 2,
+    );
+    this.mMapIsometricGridLayout.position.set(
+      this.mMapIsometricGridLayout.width / 2,
+      this.mMapIsometricGridLayout.height / 2,
+    );
+    this.mMapIsometricGridLayout.zIndex = 0;
+
     this.mEditSpriteIdx = -1;
     this.mMapContainer = new MapContainer(mapContainerPos[0], mapContainerPos[1]);
-    this.mMapContainer.position.set(mapContainerPos[0], mapContainerPos[1]);
-    await this.mMapContainer.makeGuideLine();
     this.mMapContainer.zIndex = 1;
+    this.mMapContainer.position.set(canvasInfo.width / 2, 50);
 
     this.mEditTool = new EditTool();
-    this.mEditTool.position.set(0, 0);
     this.mEditTool.zIndex = 2;
+
+    this.addChild(this.mMapIsometricGridLayout, this.mMapContainer);
+    // this.addChild( this.mMapContainer, this.mEditTool);
 
     this.sortableChildren = true;
     this.interactive = true;
     this.cursor = 'grab';
-
-    this.addChild(this.mMapContainer, this.mEditTool);
-
     this.onwheel = (e) => {
       const { x } = this.mMapContainer.scale;
       const wheelUp = e.deltaY < 0 && x > 0.6;
@@ -78,7 +90,10 @@ export default class MapEditor extends Scene {
     this.onPointerMove = (e: PIXI.FederatedPointerEvent) => {
       if (this.mIsMovingMap && e.ctrlKey) {
         const { x, y } = { x: Math.floor(e.global.x), y: Math.floor(e.global.y) };
-        this.mMapContainer.moveMap(x - this.mMapPos[0], y - this.mMapPos[1]);
+
+        const moveX = x - this.mMapPos[0];
+        const moveY = y - this.mMapPos[1];
+        this.mMapContainer.moveMap(moveX, moveY);
         this.mMapPos = [x, y];
         this.cursor = 'grabbing';
       }
@@ -93,14 +108,38 @@ export default class MapEditor extends Scene {
         this.mEditSprite[this.mEditSpriteIdx].disable();
         this.mEditSpriteIdx = -1;
       }
+      const { x, y } = this.mMapContainer.position;
+      this.mMapIsometricGridLayout.position.set(x, y);
       this.mIsMovingMap = false;
       this.cursor = 'pointer';
     };
   }
 
   async registWheelEvt(wheelUp: boolean, wheelDown: boolean) {
-    if (wheelUp) this.mMapContainer.scaleDown();
-    if (wheelDown) this.mMapContainer.scaleUp();
+    const { x } = this.mMapContainer.scale;
+    if (wheelUp && x < 0.5) {
+      this.mMapContainer.scale.set(0.5);
+      this.mMapIsometricGridLayout.scale.set(0.5);
+    }
+
+    if (wheelUp && x >= 0.5) {
+      this.mMapContainer.scale.x -= 0.02;
+      this.mMapContainer.scale.y -= 0.02;
+      this.mMapIsometricGridLayout.scale.set(this.mMapContainer.scale.x);
+    }
+
+    if (wheelDown && x > 2) {
+      this.mMapContainer.scale.set(0.5);
+      this.mMapIsometricGridLayout.scale.set(0.5);
+    }
+    if (wheelDown && x <= 2) {
+      this.mMapContainer.scale.x += 0.02;
+      this.mMapContainer.scale.y += 0.02;
+      this.mMapIsometricGridLayout.scale.set(this.mMapContainer.scale.x);
+    }
+    const mapX = this.mMapContainer.position.x;
+    const mapY = this.mMapContainer.position.y;
+    this.mMapIsometricGridLayout.position.set(mapX, mapY);
   }
 
   addSprite(textureName: string, x: number, y: number) {
