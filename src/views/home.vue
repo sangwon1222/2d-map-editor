@@ -6,11 +6,13 @@ import { onMounted, ref } from 'vue';
 import { resize } from '@/util';
 import App from '@app/app';
 import api from '@/api';
+import MapEditor from '@/app/scene/mapEditor/mapEditor';
 import { SocketIo } from '@/socket';
 
 const refUserIdInput = ref(null);
 onMounted(async () => {
   useLayoutStore.isLoading = true;
+
   const canvasElement = document.getElementById('pixi-canvas') as HTMLCanvasElement;
   const { backgroundColor, width, height } = canvasInfo;
   window['app'] = new App({ backgroundColor, width, height, view: canvasElement });
@@ -24,28 +26,26 @@ onMounted(async () => {
   useLayoutStore.isLoading = false;
 });
 
-const sendUserId = async () => {
-  const useId = 'id';
-  const pw = 'pw';
-  const nickname = 'nickname';
-  const { data } = await api.post('auth/sign-up', { useId, pw, nickname });
+const saveMap = () => {
+  const data = (App.getHandle.getScene as MapEditor).saveMapData();
   console.log(data);
+  localStorage.setItem('tile-map', JSON.stringify(data));
 };
 </script>
 
 <template>
-  <div class="relative flex min-h-screen w-full max-w-1280 items-center justify-center bg-gray-800">
-    <canvas id="pixi-canvas" class="relative z-10" />
-    <!-- <canvas id="pixi-canvas" :class="useSocketStore.mySocketId ? 'relative z-10' : 'absolute -z-10 opacity-0'" />
-    <div v-if="!useSocketStore.mySocketId">
-      <div>닉네임을 작성하세요.</div>
-      <div class="flex gap-10">
-        <input ref="refUserIdInput" type="text" @keydown.enter="sendUserId" />
-        <button
-          class="use-before-tag flex h-30 w-30 items-center justify-center rounded-full bg-white before:border-l-teal-700"
-          @click="sendUserId"
-        />
+  <div class="relative flex w-full items-center justify-center bg-black">
+    <div class="fixed left-0 top-10 flex w-full justify-between">
+      <div class="flex flex-col">
+        <p>ctrl + mouse move (selected item): Item Placement</p>
+        <p>alt + mouse down+ mouse move : Map Move</p>
+        <p>mouse wheel : Map Scale</p>
       </div>
-    </div> -->
+
+      <button class="rounded border-2 border-white px-20 py-10 duration-500 hover:bg-gray-700" @click="saveMap">
+        저장
+      </button>
+    </div>
+    <canvas id="pixi-canvas" class="relative z-10" />
   </div>
 </template>

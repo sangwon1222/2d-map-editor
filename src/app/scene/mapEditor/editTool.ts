@@ -3,126 +3,116 @@ import { canvasInfo } from '@/util/config';
 import MapEditor from './mapEditor';
 import * as PIXI from 'pixijs';
 import gsap from 'gsap';
-import EditSprite from './editToolSprite';
+import EditItem from './editItem';
 import Button from './button';
-import { map } from 'lodash-es';
+import { find, map } from 'lodash-es';
+
+import totalImg from '../../resource/resouce.json';
+import { useItemStore } from '@/store/item';
+const resourceList = totalImg['map-editor'].img;
 
 const resetPosScale = 50;
-const toolW = 260;
+const toolWidth = 500;
 export default class EditTool extends PIXI.Container {
-  private mResetMapPosBtn: Button;
-  private mSpriteList: Array<EditSprite>;
-  private mSpriteContainer: PIXI.Container;
-  private mOpenSpriteContainer: boolean;
-  private mBtnMotion: gsap.core.Timeline;
+  private mMapPosBtn: Button;
+  private mSpriteList: Array<EditItem>;
+  private mSpriteLayer: PIXI.Container;
+  private mOpenSpriteLayer: boolean;
   constructor() {
     super();
-    this.mSpriteContainer = new PIXI.Container();
+    this.mOpenSpriteLayer = false;
+  }
+
+  async init() {
+    await this.drawLayer();
+    await this.drawItem();
+    await this.drawChevron();
+    await this.drawPosBtn();
+  }
+
+  resetSelectEditItem() {
+    map(this.mSpriteList, (e) => e.blur());
+  }
+
+  private async drawLayer() {
+    /**sprite-layer */
+    this.mSpriteLayer = new PIXI.Container();
+    this.mSpriteLayer.position.set(canvasInfo.width, 0);
+    this.mSpriteLayer.zIndex = 1;
+    this.addChild(this.mSpriteLayer);
+
+    /**bg */
     const bg = new PIXI.Graphics();
     bg.beginFill(0xbcbcbc, 1);
-    bg.drawRect(0, 0, toolW, 800);
+    bg.drawRect(0, 0, toolWidth, 800);
     bg.endFill();
-    this.mSpriteContainer.addChild(bg);
+    this.mSpriteLayer.addChild(bg);
+  }
 
-    const textList = ['50px', '100px'];
-    map(textList, (e, i) => {
-      const text = new PIXI.Text(e, { fill: 0xbcbcbc });
-      text.position.set(i * 60, 10);
-      this.mSpriteContainer.addChild(text);
-    });
-
-    this.mSpriteContainer.position.set(canvasInfo.width, 0);
-    this.mSpriteContainer.zIndex = 1;
-
-    const rsc = [
-      'black-wall-tile-50.png',
-      'black-wall-tile-t-r-50.png',
-      'black-wall-tile-t-l-50.png',
-      'black-wall-tile-b-r-50.png',
-      'black-wall-tile-b-l-50.png',
-      'wall-tile-50.png',
-      'wall-tile-t-r-50.png',
-      'wall-tile-t-l-50.png',
-      'wall-tile-b-r-50.png',
-      'wall-tile-b-l-50.png',
-      //   'black-wall-tile-100.png',
-      //   'black-wall-tile-200.png',
-      //   'wall-tile-100.png',
-      //   'wall-tile-200.png',
-    ];
-    const layout = new PIXI.Container();
-    layout.position.set(20, 100);
-    this.mSpriteContainer.addChild(layout);
+  async drawItem() {
     this.mSpriteList = [];
     let colId = 0;
-    for (let i = 0; i < rsc.length; i++) {
+    for (let i = 0; i < resourceList.length; i++) {
       const gap = 20;
       const rowId = i % 3 ? 1 : 0;
       if (rowId === 0 && i > 0) colId += 1;
-      this.mSpriteList.push(new EditSprite(rsc[i]));
 
-      const bgWidth = this.mSpriteList[i].width + 20;
-      const bgHeight = this.mSpriteList[i].height + 20;
-      const x = i ? rowId * (this.mSpriteList[i - 1].x + bgWidth) : 0;
-      const y = i ? colId * (bgHeight + 10) : 0;
+      const itemId = find(useItemStore.itemData, (e) => e.name === resourceList[i])?.id;
+      const editItems = new EditItem(itemId, resourceList[i]);
+      editItems.init();
+      this.mSpriteList.push(editItems);
+      this.sortableChildren = true;
+
+      const bgWidth = this.mSpriteList[i].width;
+      const bgHeight = this.mSpriteList[i].height;
+      const x = i % 3 ? rowId * (this.mSpriteList[i - 1].x + bgWidth) : 120;
+      const y = i ? colId * bgHeight + 10 : 10;
 
       this.mSpriteList[i].position.set(x + gap / 2, y + gap / 2);
       this.mSpriteList[i].zIndex = 2;
-
-      const bg = new PIXI.Graphics();
-      bg.beginFill(0xffffff, 1);
-      bg.drawRect(0, 0, bgWidth, bgHeight);
-      bg.endFill();
-      bg.position.set(x, y);
-      bg.zIndex = 1;
-
-      layout.addChild(bg, this.mSpriteList[i]);
+      this.mSpriteLayer.addChild(this.mSpriteList[i]);
     }
-
-    this.mOpenSpriteContainer = false;
-
-    const chevron = new Button(rscManager.getHandle.getRsc('chevron.png', true));
-    chevron.anchor.set(0.5);
-    chevron.rotation = (90 * Math.PI) / 180;
-    chevron.scale.set(0.1);
-    chevron.zIndex = 2;
-    chevron.position.set(canvasInfo.width - resetPosScale, resetPosScale);
-    chevron.interactive = true;
-    chevron.tint = this.mOpenSpriteContainer ? 0x00ff00 : 0xffffff;
-    chevron.onDown = () => {
-      this.mOpenSpriteContainer = !this.mOpenSpriteContainer;
-      const radian = this.mOpenSpriteContainer ? (-90 * Math.PI) / 180 : (90 * Math.PI) / 180;
-      const x = this.mOpenSpriteContainer ? canvasInfo.width - toolW : canvasInfo.width;
-      gsap.to(this.mSpriteContainer, { x, duration: 0.5 });
-      gsap.to(chevron, { rotation: radian, duration: 0.5 });
-      chevron.tint = this.mOpenSpriteContainer ? 0x00ff00 : 0xffffff;
-    };
-    this.addChild(chevron);
-
-    this.mResetMapPosBtn = new Button(rscManager.getHandle.getRsc('pos-icon.png', true));
-    this.mResetMapPosBtn.scale.set(0.1);
-    this.mResetMapPosBtn.anchor.set(0.5);
-    // this.mResetMapPosBtn.position.set(canvasInfo.width - resetPosScale * 2, resetPosScale);
-    this.mResetMapPosBtn.position.set(this.mResetMapPosBtn.width, this.mResetMapPosBtn.height);
-    this.mResetMapPosBtn.interactive = true;
-    this.mResetMapPosBtn.onDown = () => this.resetMapContainerPos();
-    this.mResetMapPosBtn.onEnter = () => {
-      this.mBtnMotion?.clear();
-      this.mBtnMotion = gsap.timeline();
-      this.mBtnMotion.to(this.mResetMapPosBtn, { rotation: -0.1, duration: 0.15 });
-      this.mBtnMotion.to(this.mResetMapPosBtn, { rotation: 0.1, duration: 0.15 });
-      this.mBtnMotion.to(this.mResetMapPosBtn, { rotation: 0, duration: 0.15 });
-    };
-
-    // this.addChild(this.mResetMapPosBtn, this.mSpriteContainer);
-    this.mSpriteContainer.addChild(this.mResetMapPosBtn);
-    this.addChild(this.mSpriteContainer);
-    this.sortableChildren = true;
   }
 
-  resetMapContainerPos() {
-    const mapContainer = (this.parent as MapEditor).mapContainer;
-    const [x, y] = mapContainer.getInitPos;
-    gsap.to(mapContainer, { x, y, duration: 0.5 });
+  async drawChevron() {
+    const scrWidth = canvasInfo.width;
+
+    const chevron = new Button(rscManager.getHandle.getRsc('chevron.png', true), true);
+    chevron.rotation = (90 * Math.PI) / 180;
+    chevron.zIndex = 2;
+    chevron.position.set(scrWidth - resetPosScale, resetPosScale);
+    chevron.interactive = true;
+    chevron.tint = this.mOpenSpriteLayer ? 0x00ff00 : 0xffffff;
+    chevron.onDown = () => {
+      this.mOpenSpriteLayer = !this.mOpenSpriteLayer;
+      const isOpen = this.mOpenSpriteLayer;
+      chevron.tint = isOpen ? 0x00ff00 : 0xffffff;
+      const radian = isOpen ? (-90 * Math.PI) / 180 : (90 * Math.PI) / 180;
+      const openPos = isOpen ? scrWidth - toolWidth + resetPosScale : scrWidth - resetPosScale;
+      const x = isOpen ? scrWidth - toolWidth : scrWidth;
+
+      gsap.to(this.mSpriteLayer, { x, duration: 0.5 });
+      gsap.to(chevron, { x: openPos, rotation: radian, duration: 0.5 });
+    };
+
+    this.addChild(chevron);
+  }
+
+  async drawPosBtn() {
+    this.mMapPosBtn = new Button(rscManager.getHandle.getRsc('pos-icon.png', true), true);
+    this.mMapPosBtn.zIndex = 2;
+    this.mMapPosBtn.position.set(canvasInfo.width - this.mMapPosBtn.width * 2, this.mMapPosBtn.height);
+    this.mMapPosBtn.interactive = true;
+    this.mMapPosBtn.onDown = () => this.resetMapLayerPos();
+  }
+
+  private resetMapLayerPos() {
+    const mapLayer = (this.parent as MapEditor).mapLayer;
+    const gridLayer = (this.parent as MapEditor).gridLayer;
+
+    const [x, y] = mapLayer.getInitPos;
+    const duration = 0.25;
+    gsap.to(mapLayer, { x, y, duration, onComplete: () => mapLayer.position.set(x, y) });
+    gsap.to(gridLayer, { x, y, duration, onComplete: () => mapLayer.position.set(x, y) });
   }
 }

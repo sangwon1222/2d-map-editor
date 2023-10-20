@@ -15,6 +15,16 @@ document.addEventListener(
   { passive: false },
 );
 
+document.addEventListener(
+  'contextmenu',
+  (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  },
+  { passive: false },
+);
+
 document.body.addEventListener(
   'touchstart',
   function (e) {

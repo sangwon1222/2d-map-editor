@@ -1,11 +1,7 @@
 import { reactive } from 'vue';
 
 export const useMapStore: TypeMapStore = reactive({
-  mapJson: JSON.parse(localStorage.getItem('mapJson'))
-    ? JSON.parse(localStorage.getItem('mapJson'))
-    : Array.from({ length: 14 }, () =>
-        Array.from({ length: 14 }, () => {
-          return { idx: -1, itemId: 1 };
-        }),
-      ),
+  mapJson: JSON.parse(localStorage.getItem('tile-map'))
+    ? JSON.parse(localStorage.getItem('tile-map'))
+    : [[], [], [], [], [], [], [], [], [], [], [], [], [], []],
 });

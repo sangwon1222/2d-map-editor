@@ -8,14 +8,19 @@ export default class Button extends PIXI.Sprite {
   set isMoving(v: boolean) {
     this.mIsMoving = v;
   }
-  constructor(texture: PIXI.Texture) {
+
+  constructor(texture: PIXI.Texture, centerAnchor?: boolean) {
     super();
     this.mIsMoving = false;
     this.texture = texture;
     this.cursor = 'pointer';
+    if (centerAnchor) {
+      this.anchor.set(0.5);
+      this.position.set(this.width / 2, this.height / 2);
+    }
 
     this.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      if (e.ctrlKey) return;
+      if (e.altKey) return;
       e.defaultPrevented = true;
       this.onDown();
     });

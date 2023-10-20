@@ -1,37 +1,33 @@
 import { canvasInfo } from '@/util/config';
-import MapContainer from './mapContainer';
+import MapLayer from './mapLayer';
 import Scene from '@app/scene/scene';
 import EditTool from './editTool';
 import * as PIXI from 'pixijs';
-import SpriteInMap from './SpriteInMap';
 import { map } from 'lodash-es';
 import { useMapStore } from '@/store/map';
 import GridLayer from './gridLayer';
+import gsap from 'gsap';
 
-const mapContainerPos = [canvasInfo.width / 2, canvasInfo.height / 2];
+const mapLayerPos = [canvasInfo.width / 2, canvasInfo.height / 2];
 /**
  * @params {number} - scene id
  * @params {string} - scene name
  */
 export default class MapEditor extends Scene {
-  private mMapContainer: MapContainer;
-  private mMapIsometricGridLayout: GridLayer;
+  private mMapLayer: MapLayer;
+  private mGridLayer: GridLayer;
   private mIsMovingMap: Boolean;
   private mMapPos: number[];
   private mEditTool: EditTool;
-  private mEditSprite: { [key: number]: SpriteInMap };
-  private mEditSpriteIdx: number;
-  private mEditSpritePos: number[];
 
-  get editSpriteAry(): { [key: number]: SpriteInMap } {
-    return this.mEditSprite;
+  get mapLayer(): MapLayer {
+    return this.mMapLayer;
   }
-  set editSpriteIdx(v: number) {
-    this.mEditSpriteIdx = v;
+  get gridLayer(): GridLayer {
+    return this.mGridLayer;
   }
-
-  get mapContainer(): MapContainer {
-    return this.mMapContainer;
+  get editTool(): EditTool {
+    return this.mEditTool;
   }
 
   constructor(sceneId: number, name: string) {
@@ -40,162 +36,104 @@ export default class MapEditor extends Scene {
     this.hitArea = new PIXI.Rectangle(0, 0, canvasInfo.width, canvasInfo.height);
     this.mIsMovingMap = false;
     this.mMapPos = [0, 0];
-    this.mEditSpritePos = [-1, -1];
-    this.mEditSprite = {};
   }
 
   async init() {
-    this.mMapIsometricGridLayout = new GridLayer();
-    await this.mMapIsometricGridLayout.drawIsometric();
-    this.mMapIsometricGridLayout.pivot.set(
-      this.mMapIsometricGridLayout.width / 2,
-      this.mMapIsometricGridLayout.height / 2,
-    );
-    this.mMapIsometricGridLayout.position.set(
-      this.mMapIsometricGridLayout.width / 2,
-      this.mMapIsometricGridLayout.height / 2,
-    );
-    this.mMapIsometricGridLayout.zIndex = 0;
-
-    this.mEditSpriteIdx = -1;
-    this.mMapContainer = new MapContainer(mapContainerPos[0], mapContainerPos[1]);
-    this.mMapContainer.zIndex = 1;
-    this.mMapContainer.position.set(canvasInfo.width / 2, 50);
-
-    this.mEditTool = new EditTool();
-    this.mEditTool.zIndex = 2;
-
-    this.addChild(this.mMapIsometricGridLayout, this.mMapContainer);
-    // this.addChild( this.mMapContainer, this.mEditTool);
-
+    await this.drawLayer();
     this.sortableChildren = true;
+
     this.interactive = true;
     this.cursor = 'grab';
+
     this.onwheel = (e) => {
-      const { x } = this.mMapContainer.scale;
+      const { x } = this.mMapLayer.scale;
       const wheelUp = e.deltaY < 0 && x > 0.6;
       const wheelDown = e.deltaY > 0 && x < 2;
-      this.registWheelEvt(wheelUp, wheelDown);
+      this.setMapScale(wheelUp, wheelDown);
     };
 
+    /**@description Scene.ts 함수 */
     this.usePointerEvent();
 
+    /**@description Scene.ts 함수 */
     this.onPointerDown = (e: PIXI.FederatedPointerEvent) => {
       const { x, y } = { x: Math.floor(e.global.x), y: Math.floor(e.global.y) };
       this.mMapPos = [x, y];
 
-      this.mIsMovingMap = e.ctrlKey;
+      this.mIsMovingMap = e.altKey;
     };
 
+    /**@description Scene.ts 함수 */
     this.onPointerMove = (e: PIXI.FederatedPointerEvent) => {
-      if (this.mIsMovingMap && e.ctrlKey) {
-        const { x, y } = { x: Math.floor(e.global.x), y: Math.floor(e.global.y) };
-
-        const moveX = x - this.mMapPos[0];
-        const moveY = y - this.mMapPos[1];
-        this.mMapContainer.moveMap(moveX, moveY);
-        this.mMapPos = [x, y];
-        this.cursor = 'grabbing';
-      }
-
-      if (this.mEditSprite[this.mEditSpriteIdx]?.isMovingInMap) {
-        this.moveSprite(e);
-      }
+      if (this.mIsMovingMap && e.altKey) return this.moveMap(Math.floor(e.global.x), Math.floor(e.global.y));
+      // if (editingSprite?.isMovingInMap) return this.moveSprite(Math.floor(e.global.x), Math.floor(e.global.y));
     };
 
+    /**@description Scene.ts 함수 */
     this.disablePointerEvt = (_e: PIXI.FederatedPointerEvent) => {
-      if (this.mEditSpriteIdx > -1) {
-        this.mEditSprite[this.mEditSpriteIdx].disable();
-        this.mEditSpriteIdx = -1;
-      }
-      const { x, y } = this.mMapContainer.position;
-      this.mMapIsometricGridLayout.position.set(x, y);
+      const { x, y } = this.mMapLayer.position;
+      this.mGridLayer.position.set(x, y);
       this.mIsMovingMap = false;
       this.cursor = 'pointer';
     };
   }
 
-  async registWheelEvt(wheelUp: boolean, wheelDown: boolean) {
-    const { x } = this.mMapContainer.scale;
+  private async drawLayer() {
+    this.mGridLayer = new GridLayer();
+    await this.mGridLayer.drawIsometric();
+    this.mGridLayer.pivot.set(this.mGridLayer.width / 2, this.mGridLayer.height / 2);
+    this.mGridLayer.position.set(mapLayerPos[0], mapLayerPos[1]);
+    this.mGridLayer.zIndex = 0;
+
+    this.mMapLayer = new MapLayer(mapLayerPos[0], mapLayerPos[1]);
+    await this.mMapLayer.init();
+    this.mMapLayer.zIndex = 1;
+    this.mMapLayer.position.set(mapLayerPos[0], mapLayerPos[1]);
+
+    this.mEditTool = new EditTool();
+    await this.mEditTool.init();
+    this.mEditTool.zIndex = 2;
+
+    this.addChild(this.mGridLayer, this.mMapLayer, this.mEditTool);
+  }
+
+  async setMapScale(wheelUp: boolean, wheelDown: boolean) {
+    const { x } = this.mMapLayer.scale;
     if (wheelUp && x < 0.5) {
-      this.mMapContainer.scale.set(0.5);
-      this.mMapIsometricGridLayout.scale.set(0.5);
+      this.mMapLayer.scale.set(0.5);
+      this.mGridLayer.scale.set(0.5);
     }
 
     if (wheelUp && x >= 0.5) {
-      this.mMapContainer.scale.x -= 0.02;
-      this.mMapContainer.scale.y -= 0.02;
-      this.mMapIsometricGridLayout.scale.set(this.mMapContainer.scale.x);
+      this.mMapLayer.scale.x -= 0.02;
+      this.mMapLayer.scale.y -= 0.02;
+      this.mGridLayer.scale.set(this.mMapLayer.scale.x);
     }
 
     if (wheelDown && x > 2) {
-      this.mMapContainer.scale.set(0.5);
-      this.mMapIsometricGridLayout.scale.set(0.5);
+      this.mMapLayer.scale.set(0.5);
+      this.mGridLayer.scale.set(0.5);
     }
     if (wheelDown && x <= 2) {
-      this.mMapContainer.scale.x += 0.02;
-      this.mMapContainer.scale.y += 0.02;
-      this.mMapIsometricGridLayout.scale.set(this.mMapContainer.scale.x);
+      this.mMapLayer.scale.x += 0.02;
+      this.mMapLayer.scale.y += 0.02;
+      this.mGridLayer.scale.set(this.mMapLayer.scale.x);
     }
-    const mapX = this.mMapContainer.position.x;
-    const mapY = this.mMapContainer.position.y;
-    this.mMapIsometricGridLayout.position.set(mapX, mapY);
+    const mapPos = this.mMapLayer.position;
+    this.mGridLayer.position.set(mapPos.x, mapPos.y);
   }
 
-  addSprite(textureName: string, x: number, y: number) {
-    const idx = Object.keys(this.mEditSprite).length;
-    this.mEditSprite[idx] = new SpriteInMap(idx, textureName, 1);
-    this.mEditSprite[idx].isMovingInMap = true;
-    this.mEditSpriteIdx = idx;
-    this.mEditSprite[idx].position.set(x, y);
-    this.mEditSprite[idx].zIndex = 6;
-    this.addChild(this.mEditSprite[idx]);
+  private moveMap(x: number, y: number) {
+    const moveX = x - this.mMapPos[0];
+    const moveY = y - this.mMapPos[1];
+    this.mMapLayer.moveMap(moveX, moveY);
+    this.mGridLayer.position.set(this.mMapLayer.x, this.mMapLayer.y);
+    this.mMapPos = [x, y];
+    this.cursor = 'grabbing';
   }
 
-  editSpritePos(idx: number, x: number, y: number) {
-    if (idx < 0) return;
-    map(this.mEditSprite, (e) => e.disable());
-
-    this.mEditSpriteIdx = idx;
-    this.mEditSprite[idx].isMovingInMap = true;
-    this.mEditSprite[idx].position.set(x, y);
-
-    this.mMapContainer.removeChild(this.mEditSprite[idx]);
-    this.addChild(this.mEditSprite[idx]);
-
-    const mapPos = this.mMapContainer.position;
-    const mapx = Math.floor((x - mapPos.x) / 50) * 50;
-    const mapy = Math.floor((y - mapPos.y) / 50) * 50;
-    this.mEditSpritePos = [mapx, mapy];
-  }
-
-  moveSprite(e: PIXI.FederatedPointerEvent) {
-    const sprite = this.mEditSprite[this.mEditSpriteIdx];
-    const { global } = e;
-    const mapPos = this.mMapContainer.position;
-    const mapx = Math.floor((global.x - mapPos.x) / 50) * 50;
-    const mapy = Math.floor((global.y - mapPos.y) / 50) * 50;
-
-    const isEnterMap = mapx >= 0 && mapx <= canvasInfo.width && mapy >= 0 && mapy <= canvasInfo.height;
-    const x = isEnterMap ? mapPos.x + mapx + sprite.width / 2 : global.x;
-    const y = isEnterMap ? mapPos.y + mapy + sprite.height / 2 : global.y;
-    sprite.position.set(x, y);
-    this.mEditSpritePos = [isEnterMap ? mapx : -1, isEnterMap ? mapy : -1];
-  }
-
-  endMove() {
-    const [x, y] = this.mEditSpritePos;
-    if (x >= 0 && x <= canvasInfo.width && y >= 0 && y <= canvasInfo.height) {
-      this.removeChild(this.mEditSprite[this.mEditSpriteIdx]);
-      useMapStore.mapJson[y / 50][x / 50] = {
-        idx: this.mEditSpriteIdx,
-        textureName: this.mEditSprite[this.mEditSpriteIdx].textureName,
-        itemStatus: this.mEditSprite[this.mEditSpriteIdx].itemStatus,
-      };
-      this.mMapContainer.updateMap();
-    }
-
-    this.mEditSpritePos = [-1, -1];
+  saveMapData() {
+    return this.mMapLayer.saveMapData();
   }
 
   async endGame() {
