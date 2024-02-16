@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 
 export const useLayoutStore: TypeLayoutStore = reactive({
-  isLoading: true,
+  isLoading: false,
   gnbMode: false,
 });

@@ -3,8 +3,7 @@ export const canvasInfo: Readonly<TypeCanvasInfo> = {
   width: 1400,
   height: 800,
   tileScale: 50,
-  tileMap: Array.from({ length: 16 }, () => Array.from({ length: 26 }, () => 'floor-1.png')),
 };
 
 export const productLink = 'http://lsw.kr/';
-export const devLink: string = location.href;
+export const devLink: string = location.origin;

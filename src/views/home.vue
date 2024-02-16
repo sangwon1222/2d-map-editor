@@ -1,51 +1,28 @@
 <script setup lang="ts" scoped>
-import { useLayoutStore } from '@store/layout';
-import { canvasInfo } from '@/util/config';
-import { useSocketStore } from '@store/socket';
-import { onMounted, ref } from 'vue';
-import { resize } from '@/util';
-import App from '@app/app';
-import api from '@/api';
-import { SocketIo } from '@/socket';
+import { useAuthStore } from '@/store/auth';
+import { useRouter } from 'vue-router';
+import { setEncode } from '@/util';
+import { ref } from 'vue';
 
-const refUserIdInput = ref(null);
-onMounted(async () => {
-  useLayoutStore.isLoading = true;
-  const canvasElement = document.getElementById('pixi-canvas') as HTMLCanvasElement;
-  const { backgroundColor, width, height } = canvasInfo;
-  window['app'] = new App({ backgroundColor, width, height, view: canvasElement });
-  await window['app'].init();
-  resize(canvasElement);
+const router = useRouter();
+const refInput = ref(null);
 
-  window.addEventListener('resize', () => resize(canvasElement));
-  const input = refUserIdInput.value as HTMLInputElement;
-  input?.focus();
-
-  useLayoutStore.isLoading = false;
-});
-
-const sendUserId = async () => {
-  const useId = 'id';
-  const pw = 'pw';
-  const nickname = 'nickname';
-  const { data } = await api.post('auth/sign-up', { useId, pw, nickname });
-  console.log(data);
+const onSubmit = (_e: KeyboardEvent | MouseEvent) => {
+  const ableEnter = refInput.value.value === 'lsw' || refInput.value.value === 'kth';
+  if (ableEnter) {
+    useAuthStore.userID = refInput.value.value;
+    const u = setEncode(useAuthStore.userID, 'userid');
+    localStorage.setItem('u', u);
+    router.push('app');
+  } else refInput.value.select();
 };
 </script>
 
 <template>
-  <div class="relative flex min-h-screen w-full max-w-1280 items-center justify-center bg-gray-800">
-    <canvas id="pixi-canvas" class="relative z-10" />
-    <!-- <canvas id="pixi-canvas" :class="useSocketStore.mySocketId ? 'relative z-10' : 'absolute -z-10 opacity-0'" />
-    <div v-if="!useSocketStore.mySocketId">
-      <div>닉네임을 작성하세요.</div>
-      <div class="flex gap-10">
-        <input ref="refUserIdInput" type="text" @keydown.enter="sendUserId" />
-        <button
-          class="use-before-tag flex h-30 w-30 items-center justify-center rounded-full bg-white before:border-l-teal-700"
-          @click="sendUserId"
-        />
-      </div>
-    </div> -->
+  <div class="relative flex min-h-screen w-full max-w-[1280px] items-center justify-center">
+    <div class="flex gap-10">
+      <input ref="refInput" type="text" class="h-[32px]" @keydown.enter="onSubmit" />
+      <button class="flex h-[32px] items-center rounded border bg-white p-2 text-black" @click="onSubmit">Enter</button>
+    </div>
   </div>
 </template>

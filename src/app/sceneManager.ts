@@ -3,7 +3,7 @@ import Scene from '@app/scene/scene';
 import { rscManager } from '@app/resource/resourceManager';
 import rsc from '@app/resource/resouce.json';
 import { useLayoutStore } from '@store/layout';
-import MapEditor from '@/app/scene/mapEditor/mapEditor';
+import Home from '@/app/scene/home';
 import { find } from 'lodash-es';
 
 export default class SceneManager extends PIXI.Container {
@@ -27,7 +27,7 @@ export default class SceneManager extends PIXI.Container {
 
   async init() {
     this.mCurrentSceneIdx = 0;
-    this.mSceneAry = [new MapEditor(0, 'map-editor')];
+    this.mSceneAry = [new Home(0, 'home')];
   }
 
   async start() {
@@ -43,16 +43,16 @@ export default class SceneManager extends PIXI.Container {
   }
 
   async changeScene(sceneName: string) {
+    console.log(`--we go [${sceneName}]`);
+
     await rscManager.getHandle.loadAllRsc(rsc[sceneName]);
     useLayoutStore.isLoading = true;
-
     this.removeChildren();
     await this.mSceneAry[this.mCurrentSceneIdx]?.endGame();
     const scene = find(this.mSceneAry, (e) => sceneName === e.info.name);
     await scene.init();
     this.addChild(scene);
-
-    console.log(`--we go [${sceneName}]`);
+    await scene.startGame();
     useLayoutStore.isLoading = false;
   }
 }

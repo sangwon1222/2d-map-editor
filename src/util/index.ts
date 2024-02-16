@@ -4,18 +4,13 @@ import { canvasInfo } from '@/util/config';
 
 export const resize = (canvasElement: HTMLCanvasElement) => {
   if (!canvasElement) return;
-
   const { width, height } = canvasInfo;
   const screenRate = innerWidth / innerHeight;
   const canvasRate = width / height;
 
-  if (screenRate > canvasRate) {
-    canvasElement.style.width = `${innerHeight * canvasRate}px`;
-    canvasElement.style.height = `${innerHeight}px`;
-  } else {
-    canvasElement.style.width = `${innerWidth}px`;
-    canvasElement.style.height = `${innerWidth / canvasRate}px`;
-  }
+  const changeWidth = screenRate > canvasRate ? innerHeight * canvasRate : innerWidth;
+  const changeHeight = screenRate > canvasRate ? innerHeight * canvasRate : innerWidth / canvasRate;
+  canvasElement.setAttribute('style', `width:${changeWidth}px; height: ${changeHeight}px;`);
 };
 
 export const setEncode = (data: string, secretKey: string) => {

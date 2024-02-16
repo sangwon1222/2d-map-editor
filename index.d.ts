@@ -10,10 +10,6 @@ declare interface TypeItemStore {
   itemJson: any;
 }
 
-declare interface TypeMapStore {
-  mapJson: any;
-}
-
 declare interface TypeLayoutStore {
   isLoading: boolean;
   gnbMode: boolean;
@@ -31,7 +27,6 @@ declare interface TypeCanvasInfo {
   width: number;
   height: number;
   tileScale: number;
-  tileMap: any;
 }
 
 declare interface TypeObjectAny {

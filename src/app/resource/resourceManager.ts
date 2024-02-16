@@ -29,7 +29,6 @@ export class rscManager {
     const scene = sceneName ? sceneName : currentSceneName;
 
     if (this.mRscObject[`${scene}/${src}`]) return;
-
     PIXI.Assets.add(`${scene}/${src}`, src);
     const isProduct = process.env.NODE_ENV === 'production';
     const link = isProduct ? productLink : devLink;
@@ -43,6 +42,7 @@ export class rscManager {
 
   /** @description 배열로 리소스 리스트를 보내주면 모든 리소스 로드하는 함수 */
   public async loadAllRsc(rscInfoAry: TypeObjectStringAry) {
+    if (!rscInfoAry) return;
     const sceneName = Application.getHandle.getScene?.info?.name;
     for (const src of rscInfoAry.img) {
       await this.loadRsc(src, sceneName);

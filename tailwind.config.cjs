@@ -1,22 +1,3 @@
-const setSpace = () => {
-  const space = {};
-  for (let i = 0; i <= 2000; i++) {
-    space[+i] = `${i}px`;
-  }
-  return space;
-};
-
-const setIndex = () => {
-  const index = {};
-  for (let i = 0; i <= 2000; i++) {
-    index[+i] = `${i}`;
-  }
-  return index;
-};
-
-const spacing = setSpace();
-const indexing = setIndex();
-
 module.exports = {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   darkMode: true,
@@ -26,7 +7,6 @@ module.exports = {
       tablet: '600px',
       desktop: '800px',
     },
-    spacing: spacing,
     extend: {
       gridTemplateColumns: {
         1: 'repeat(1, minmax(0, 1fr))',
@@ -60,22 +40,12 @@ module.exports = {
         225: '225deg',
       },
       fontSize: {
-        ...spacing,
         xs: '0.75rem',
         '2xs': '0.6rem',
       },
-      spacing: spacing,
-      width: spacing,
-      minWidth: spacing,
-      maxWidth: spacing,
-      maxHeight: spacing,
-      minHeight: spacing,
-      borderRadius: spacing,
       borderWidth: {
         DEFAULT: '1px',
-        ...spacing,
       },
-      zIndex: indexing,
       keyframes: {
         slide: {
           '0%': { marginLeft: '-100%' },

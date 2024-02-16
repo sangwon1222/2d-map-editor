@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useHead } from '@vueuse/head';
+import { useAuthStore } from '@/store/auth';
+import { setDecode } from '@/util';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -10,17 +12,24 @@ const router = createRouter({
       component: () => import('../views/home.vue'),
     },
     {
-      path: '/editor',
-      name: 'editor',
-      component: () => import('../views/editor.vue'),
+      path: '/app',
+      name: 'app',
+      component: () => import('../views/app.vue'),
     },
   ],
 });
 
 router.beforeEach(async (to, _from, next) => {
-  useHead({
-    title: to.name.toString().toUpperCase(),
-  });
+  const u = localStorage.getItem('u');
+  if (!useAuthStore.userID) {
+    const decodeU = setDecode(u, 'userid');
+    useAuthStore.userID = decodeU;
+  }
+
+  if ((!useAuthStore.userID || !u) && to.path != '/') location.replace(location.origin);
+
+  const title = to.name.toString().toUpperCase();
+  useHead({ title });
   next();
 });
 
