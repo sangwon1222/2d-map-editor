@@ -23,21 +23,13 @@
     },
     "map-editor":{
       "img":[
-        "floor-1.png",
-        "black-wall-tile-50.png",
-        "black-wall-tile-t-r-50.png",
-        "black-wall-tile-t-l-50.png",
-        "black-wall-tile-b-r-50.png",
-        "black-wall-tile-b-l-50.png",
-        "black-wall-tile-100.png",
-        "black-wall-tile-200.png",
-        "wall-tile-50.png",
-        "wall-tile-t-r-50.png",
-        "wall-tile-t-l-50.png",
-        "wall-tile-b-r-50.png",
-        "wall-tile-b-l-50.png",
-        "wall-tile-100.png",
-        "wall-tile-200.png"
+        "cube-plant-1.png",
+        "cube-lava-1.png",
+        "cube-fire-1.png",
+        "cube-water-1.png",
+        "cube-wood-1.png",
+        "cube-ice-1.png",
+        "cube-stone-1.png"
       ]
     }
   }

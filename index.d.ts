@@ -7,7 +7,7 @@ declare interface TypeChatStore {
 }
 
 declare interface TypeItemStore {
-  itemJson: any;
+  itemData: any;
 }
 
 declare interface TypeLayoutStore {
