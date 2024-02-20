@@ -1,7 +1,8 @@
-import * as PIXI from 'pixijs';
 import SceneManager from '@app/sceneManager';
-import Scene from '@app/scene/scene';
 import { registVisibleChange } from '@/util';
+import Scene from '@app/scene/scene';
+import Home from './scene/home';
+import * as PIXI from 'pixijs';
 import gsap from 'gsap';
 /**
  * @params {number} - background color
@@ -43,10 +44,12 @@ export default class App extends PIXI.Application {
   /** @description 탭이 안보일 때  */
   onHiddenTab() {
     console.log('탭이 안보일 때');
+    // (this.getScene as Home).onHiddenTab();
   }
 
   /**  @description 탭이 보일 때 */
   onViewTab() {
     console.log('탭이 보일 때');
+    // (this.getScene as Home).onViewTab();
   }
 }

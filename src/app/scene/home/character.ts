@@ -1,62 +1,90 @@
 import { rscManager } from '@/app/resource/resourceManager';
+import { canvasInfo } from '@/util/config';
+import characterSheet from 'public/rsc/home/img/character-1.json';
 import * as PIXI from 'pixijs';
 
 export default class CharacterLayout extends PIXI.Container {
   private mCharacter: Character;
-  constructor() {
+  private mPos: number[];
+  private mNickname: string;
+
+  get pos(): number[] {
+    return this.mPos;
+  }
+  set pos(v: number[]) {
+    this.mPos = v;
+  }
+  get nickname(): string {
+    return this.mNickname;
+  }
+  constructor(pos: number[], nickname: string) {
     super();
+    this.mPos = pos;
+    this.mNickname = nickname;
   }
 
   async init() {
-    this.mCharacter = new Character('character-1');
+    this.mCharacter = new Character('character-1', this.mNickname);
     await this.mCharacter.init();
     this.addChild(this.mCharacter);
   }
 
-  changeDirection(direction: 'l' | 'r' | 'b-l' | 'b-r') {
+  changeDirection(direction: 'front' | 'back' | 'left' | 'right') {
     this.mCharacter.changeDirection(direction);
   }
 }
 
 class Character extends PIXI.Container {
-  private mTextures: {
-    front: { left: PIXI.Texture; right: PIXI.Texture };
-    back: { left: PIXI.Texture; right: PIXI.Texture };
-  };
+  private mTextures: PIXI.Spritesheet;
   private mCharacter: PIXI.Sprite;
-  constructor(name: string) {
+
+  private mUserIDContainer: PIXI.Container;
+  private mUserID: string;
+
+  constructor(name: string, userID: string) {
     super();
-    this.mTextures = {
-      front: {
-        left: rscManager.getHandle.getRsc(`${name}-l.png`),
-        right: rscManager.getHandle.getRsc(`${name}-r.png`),
-      },
-      back: {
-        left: rscManager.getHandle.getRsc(`${name}-b-l.png`),
-        right: rscManager.getHandle.getRsc(`${name}-b-r.png`),
-      },
-    };
+    this.mUserID = userID;
   }
 
   async init() {
-    this.mCharacter = new PIXI.Sprite();
-    this.mCharacter.texture = this.mTextures.front.right;
+    await this.createCharacter();
+    await this.createuserID();
+  }
+
+  async createCharacter() {
+    this.mTextures = new PIXI.Spritesheet(rscManager.getHandle.getRsc('character-1.png'), characterSheet);
+    await this.mTextures.parse();
+    this.mCharacter = new PIXI.Sprite(this.mTextures.textures['front']);
     this.addChild(this.mCharacter);
   }
 
-  changeDirection(direction: 'l' | 'r' | 'b-l' | 'b-r') {
+  async createuserID() {
+    this.mUserIDContainer = new PIXI.Container();
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0x000000, 0.4);
+    bg.drawRect(0, 0, canvasInfo.tileScale, 30);
+    bg.endFill();
+    bg.y = canvasInfo.tileScale;
+    const userID = new PIXI.Text(this.mUserID, { fill: 0xffffff });
+    userID.anchor.set(0.5);
+    userID.position.set(canvasInfo.tileScale / 2, canvasInfo.tileScale + 14);
+    this.mUserIDContainer.addChild(bg, userID);
+    this.addChild(this.mUserIDContainer);
+  }
+
+  changeDirection(direction: 'front' | 'back' | 'left' | 'right') {
     switch (direction) {
-      case 'l':
-        this.mCharacter.texture = this.mTextures.front.left;
+      case 'front':
+        this.mCharacter.texture = this.mTextures.textures['front'];
         break;
-      case 'r':
-        this.mCharacter.texture = this.mTextures.front.right;
+      case 'back':
+        this.mCharacter.texture = this.mTextures.textures['back'];
         break;
-      case 'b-l':
-        this.mCharacter.texture = this.mTextures.back.left;
+      case 'left':
+        this.mCharacter.texture = this.mTextures.textures['left'];
         break;
-      case 'b-r':
-        this.mCharacter.texture = this.mTextures.back.right;
+      case 'right':
+        this.mCharacter.texture = this.mTextures.textures['right'];
         break;
     }
   }

@@ -11,7 +11,7 @@ class MapApi {
     }
   };
 
-  moveCharacter = async (mapData, startPos: number[], endPos: number[]) => {
+  getMovePath = async (mapData, startPos: number[], endPos: number[]) => {
     try {
       const { data } = await axiosApi.post('map/move-character', { mapData, startPos, endPos });
       return data;

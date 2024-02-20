@@ -9,7 +9,7 @@ export const resize = (canvasElement: HTMLCanvasElement) => {
   const canvasRate = width / height;
 
   const changeWidth = screenRate > canvasRate ? innerHeight * canvasRate : innerWidth;
-  const changeHeight = screenRate > canvasRate ? innerHeight * canvasRate : innerWidth / canvasRate;
+  const changeHeight = screenRate > canvasRate ? innerHeight : innerWidth / canvasRate;
   canvasElement.setAttribute('style', `width:${changeWidth}px; height: ${changeHeight}px;`);
 };
 
